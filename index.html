@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WATER BILL CALCULATOR</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #87CEEB; /* Sky Blue */
+            overflow-x: hidden;
+        }
+
+        /* Water Flow Animation */
+        .water {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: url('https://i.ibb.co/f8KZb2H/water-pattern.png') repeat;
+            animation: flow 20s linear infinite;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        @keyframes flow {
+            from { transform: translateX(0) translateY(0); }
+            to { transform: translateX(-50%) translateY(-50%); }
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 50px;
+            flex-wrap: wrap;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .meter-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px 40px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        input.calculated {
+            background-color: #f0f0f0;
+        }
+
+        .author {
+            text-align: right;
+            font-size: 12px;
+            margin-right: 50px;
+            margin-top: 20px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0077cc;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #005fa3;
+        }
+
+        .right-side {
+            min-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="water"></div>
+    <h1>WATER BILL CALCULATOR</h1>
+
+    <div class="container">
+        <!-- Left Section -->
+        <div class="section" style="flex:1; min-width: 350px;">
+            <h3>MAIN METER READING</h3>
+            <div class="meter-section">
+                <div>
+                    <label>Previous Reading:</label>
+                    <input type="number" id="prevReading" placeholder="Enter previous reading">
+                </div>
+                <div>
+                    <label>Present Reading:</label>
+                    <input type="number" id="presentReading" placeholder="Enter present reading">
+                </div>
+                <div>
+                    <label>Total Consumption (cu.m^3):</label>
+                    <input type="number" id="totalConsumption" class="calculated" readonly>
+                </div>
+                <div>
+                    <label>Current Bill (PHP):</label>
+                    <input type="number" id="currentBill" placeholder="Enter current bill">
+                </div>
+                <div>
+                    <label>Price per Cubic Meter (PHP):</label>
+                    <input type="number" id="pricePerCubicMeter" class="calculated" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="section right-side">
+            <label>Reading Date:</label>
+            <input type="date" id="readingDate">
+
+            <h3>LOWER METER</h3>
+            <div class="meter-section">
+                <div>
+                    <label>Previous Lower:</label>
+                    <input type="number" id="prevLower" placeholder="Enter previous lower">
+                </div>
+                <div>
+                    <label>Present Lower:</label>
+                    <input type="number" id="presentLower" placeholder="Enter present lower">
+                </div>
+                <div>
+                    <label>Total LOWER:</label>
+                    <input type="number" id="totalLower" class="calculated" readonly>
+                </div>
+            </div>
+
+            <h3>UPPER METER</h3>
+            <div class="meter-section">
+                <div>
+                    <label>Previous Upper:</label>
+                    <input type="number" id="prevUpper" placeholder="Enter previous upper">
+                </div>
+                <div>
+                    <label>Present Upper:</label>
+                    <input type="number" id="presentUpper" placeholder="Enter present upper">
+                </div>
+                <div>
+                    <label>Total UPPER:</label>
+                    <input type="number" id="totalUpper" class="calculated" readonly>
+                </div>
+            </div>
+
+            <div class="meter-section">
+                <div>
+                    <label>Your Total Meter Reading:</label>
+                    <input type="number" id="totalMeterReading" class="calculated" readonly>
+                </div>
+                <div>
+                    <label>YOUR TOTAL BILL (PHP):</label>
+                    <input type="number" id="totalBill" class="calculated" readonly>
+                </div>
+            </div>
+
+            <button id="generateReport">Generate a Report</button>
+        </div>
+    </div>
+
+    <div class="author">Author: Reyvem Johnson</div>
+
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        function calculate() {
+            // Total Consumption
+            let prevReading = parseFloat(document.getElementById('prevReading').value) || 0;
+            let presentReading = parseFloat(document.getElementById('presentReading').value) || 0;
+            let totalConsumption = Math.max(presentReading - prevReading, 0);
+            document.getElementById('totalConsumption').value = totalConsumption;
+
+            // Price per Cubic Meter
+            let currentBill = parseFloat(document.getElementById('currentBill').value) || 0;
+            let pricePerCubicMeter = totalConsumption > 0 ? (currentBill / totalConsumption).toFixed(2) : 0;
+            document.getElementById('pricePerCubicMeter').value = pricePerCubicMeter;
+
+            // Total LOWER = Absolute difference
+            let prevLower = parseFloat(document.getElementById('prevLower').value) || 0;
+            let presentLower = parseFloat(document.getElementById('presentLower').value) || 0;
+            let totalLower = Math.abs(prevLower - presentLower);
+            document.getElementById('totalLower').value = totalLower;
+
+            // Total UPPER = Absolute difference
+            let prevUpper = parseFloat(document.getElementById('prevUpper').value) || 0;
+            let presentUpper = parseFloat(document.getElementById('presentUpper').value) || 0;
+            let totalUpper = Math.abs(prevUpper - presentUpper);
+            document.getElementById('totalUpper').value = totalUpper;
+
+            // Your Total Meter Reading
+            let totalMeterReading = totalLower + totalUpper;
+            document.getElementById('totalMeterReading').value = totalMeterReading;
+
+            // YOUR TOTAL BILL = Total Meter Reading × Price per Cubic Meter
+            let totalBill = totalMeterReading * parseFloat(pricePerCubicMeter || 0);
+            document.getElementById('totalBill').value = totalBill.toFixed(2);
+        }
+
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => input.addEventListener('input', calculate));
+
+        // Generate PDF report
+        document.getElementById('generateReport').addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let date = document.getElementById('readingDate').value;
+            let prevReading = document.getElementById('prevReading').value;
+            let presentReading = document.getElementById('presentReading').value;
+            let totalConsumption = document.getElementById('totalConsumption').value;
+            let currentBill = document.getElementById('currentBill').value;
+            let pricePerCubicMeter = document.getElementById('pricePerCubicMeter').value;
+            let prevLower = document.getElementById('prevLower').value;
+            let presentLower = document.getElementById('presentLower').value;
+            let totalLower = document.getElementById('totalLower').value;
+            let prevUpper = document.getElementById('prevUpper').value;
+            let presentUpper = document.getElementById('presentUpper').value;
+            let totalUpper = document.getElementById('totalUpper').value;
+            let totalMeterReading = document.getElementById('totalMeterReading').value;
+            let totalBill = document.getElementById('totalBill').value;
+
+            doc.setFontSize(18);
+            doc.text("WATER BILL REPORT", 105, 20, null, null, "center");
+            doc.setFontSize(12);
+            doc.text(`Reading Date: ${date}`, 20, 40);
+
+            doc.text("MAIN METER READING", 20, 50);
+            doc.text(`Previous Reading: ${prevReading}`, 20, 60);
+            doc.text(`Present Reading: ${presentReading}`, 20, 70);
+            doc.text(`Total Consumption (cu.m^3): ${totalConsumption}`, 20, 80);
+            doc.text(`Current Bill (PHP): ${currentBill}`, 20, 90);
+            doc.text(`Price per Cubic Meter (PHP): ${pricePerCubicMeter}`, 20, 100);
+
+            doc.text("LOWER METER", 20, 115);
+            doc.text(`Previous Lower: ${prevLower}`, 20, 125);
+            doc.text(`Present Lower: ${presentLower}`, 20, 135);
+            doc.text(`Total LOWER: ${totalLower}`, 20, 145);
+
+            doc.text("UPPER METER", 20, 160);
+            doc.text(`Previous Upper: ${prevUpper}`, 20, 170);
+            doc.text(`Present Upper: ${presentUpper}`, 20, 180);
+            doc.text(`Total UPPER: ${totalUpper}`, 20, 190);
+
+            doc.text(`Your Total Meter Reading: ${totalMeterReading}`, 20, 205);
+            doc.text(`YOUR TOTAL BILL (PHP): ${totalBill}`, 20, 220);
+            doc.text("Author: Reyvem Johnson", 20, 235);
+
+            doc.save("Water_Bill_Report.pdf");
+        });
+    </script>
+</body>
+</html>
