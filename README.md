@@ -1,4 +1,7 @@
 How It Works:
+
+Please try it here: https://rcajegas.github.io/WaterBillCaculator/
+
 The Water Bill Calculator determines your monthly water charges by using the readings from your lower and upper water meters. You need to input the previous and present readings for both meters, as well as your current total bill for the main meter. The calculator first computes the Total LOWER and Total UPPER readings by finding the absolute difference between the previous and present values for each meter. These two totals are then added together to get Your Total Meter Reading. Finally, the calculator multiplies this total reading by the Price per Cubic Meter (automatically calculated from the current bill and total consumption) to determine Your Total Bill in PHP. A detailed PDF report can also be generated for record-keeping.
 
 The reason why I made this is to avoid conflict for a shared house with different meters. 
